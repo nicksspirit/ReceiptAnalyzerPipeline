@@ -13,6 +13,14 @@ cp .\aws_lambda_fn.py .\aws_lambda\
 
 
 
+```js
+jamespath query
+
+ExpenseDocuments[].SummaryFields[].[{TypeText: Type.Text, TypeConfidence: Type.Confidence, ValueText: ValueDetection.Text, ValueConfidence: ValueDetection.Confidence}][]
+```
+
+
+
 ## External Dependencies
 
 - ImageMagick
