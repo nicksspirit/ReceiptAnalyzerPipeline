@@ -3,8 +3,12 @@ import anarcpt.anarcptlib as arlib
 import anarcpt.watcher as wch
 from anarcpt.watcher import EventAction
 from pathlib import Path
+from sqlmodel import SQLModel, create_engine
 
 cli = typer.Typer(add_completion=False)
+
+dbcli = typer.Typer()
+cli.add_typer(dbcli, name="db")
 
 
 # @cli.command()
@@ -103,6 +107,19 @@ def watch(
             EventAction(dir_upload_s3, s3_handler),
         ]
     ).run()
+
+
+@dbcli.command()
+def init():
+    """
+    Create a sqlite database and create tables
+    """
+    sqlite_file_name = "analyzed_receipts.db"
+    sqlite_url = f"sqlite:///{sqlite_file_name}"
+
+    engine = create_engine(sqlite_url, echo=True)
+
+    SQLModel.metadata.create_all(engine)
 
 
 if __name__ == "__main__":

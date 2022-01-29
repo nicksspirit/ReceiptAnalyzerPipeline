@@ -2,10 +2,13 @@ import datetime as dt
 from dataclasses import dataclass
 from pathlib import Path
 from decimal import Decimal
+from typing import Optional
+from sqlmodel import Field, SQLModel, create_engine
 
 
-@dataclass
-class ReceiptSummary:
+
+class ReceiptSummary(SQLModel, table=True):
+    pk: Optional[int] = Field(default=None, primary_key=True)
     img_id: str
     vendor_name: str = "Unknown"
     receiver_address: str = "Unknown"
