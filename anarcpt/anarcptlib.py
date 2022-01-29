@@ -120,7 +120,7 @@ class AnayzeReceipt:
         return instance._analyze_receipt(resp_dict, img_id)
 
     @classmethod
-    def analyze_s3(cls, s3document: str, s3bucket: str = "receipt-image"):
+    def analyze_froms3(cls, s3document: str, s3bucket: str = "receipt-image"):
         instance = cls()
 
         img_id = s3document.replace(".png", "")
