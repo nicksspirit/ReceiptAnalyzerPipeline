@@ -4,8 +4,12 @@ import anarcpt.watcher as wch
 from anarcpt.watcher import EventAction
 from anarcpt.exceptions import unpack_exc
 from pathlib import Path
+from sqlmodel import SQLModel, create_engine
 
 cli = typer.Typer(add_completion=False)
+
+dbcli = typer.Typer()
+cli.add_typer(dbcli, name="db")
 
 
 @cli.command()
@@ -108,6 +112,19 @@ def watch(
         ],
         pause_for=pause_for
     ).run()
+
+
+@dbcli.command()
+def init():
+    """
+    Create a sqlite database and create tables
+    """
+    sqlite_file_name = "analyzed_receipts.db"
+    sqlite_url = f"sqlite:///{sqlite_file_name}"
+
+    engine = create_engine(sqlite_url, echo=True)
+
+    SQLModel.metadata.create_all(engine)
 
 
 if __name__ == "__main__":

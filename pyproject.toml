@@ -15,6 +15,7 @@ boto3 = "^1.20.26"
 Pillow = "^8.4.0"
 loguru = "^0.5.3"
 ImageHash = "^4.2.1"
+sqlmodel = "^0.0.6"
 
 [tool.poetry.dev-dependencies]
 boto3-stubs = {extras = ["s3", "textract"], version = "^1.20.26"}
