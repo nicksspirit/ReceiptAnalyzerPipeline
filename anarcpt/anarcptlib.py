@@ -2,13 +2,13 @@ import re
 import boto3
 import csv
 import dateutil.parser as dtparser
+import imagehash
 from decimal import Decimal
 from anarcpt import models
 from anarcpt.config import logger
 from functools import partial
 from pathlib import Path
-
-# from wand.image import Image
+from PIL import Image
 from textractprettyprinter.t_pretty_print_expense import (
     get_string,
     Textract_Expense_Pretty_Print,
@@ -16,6 +16,8 @@ from textractprettyprinter.t_pretty_print_expense import (
 )
 from typing import cast
 
+# jmespath
+# ExpenseDocuments[].SummaryFields[].[{TypeText: Type.Text, TypeConfidence: Type.Confidence, ValueText: ValueDetection.Text, ValueConfidence: ValueDetection.Confidence}][]
 MONEY_REGEX = re.compile(r"(?P<currency>[\£\$\€]{1})?(?P<amount>[,\d]+.?\d*)")
 
 get_summary_expense = partial(
@@ -28,13 +30,6 @@ get_lineitem_expense = partial(
     output_type=[Textract_Expense_Pretty_Print.LINEITEMGROUPS],
     table_format=Pretty_Print_Table_Format.csv,
 )
-
-
-def unpack_exc(ex: Exception) -> tuple[str, str]:
-    ex_name = ex.__class__.__name__
-    ex_msg = getattr(ex, "message", str(ex))
-
-    return ex_name, ex_msg
 
 
 def parse_summary_csv(img_id: str, receipt_summary_csv: str) -> models.ReceiptSummary:
@@ -101,7 +96,7 @@ def parse_lineitem_csv(img_id: str, lineitem_csv: str) -> list[models.ReceiptLin
     return line_items
 
 
-class AnayzeReceipt:
+class AnalyzeReceipt:
     def __init__(self, region="us-east-2"):
         self.textract_client = boto3.client("textract", region_name=region)
 
@@ -141,22 +136,22 @@ class AnayzeReceipt:
         return receipt_summary, receipt_lineitem
 
 
-# def hash_image(image_file: Path, should_rename: bool) -> Path | str:
-#     if not image_file.exists() or not image_file.is_file():
-#         raise ValueError(f"{image_file} does not exists.")
+def hash_image(image_file: Path, should_rename: bool) -> Path | str:
+    if not image_file.exists() or not image_file.is_file():
+        raise ValueError(f"{image_file} does not exists.")
 
-#     if image_file.suffix not in (".png", ".jpg", ".jpeg"):
-#         raise ValueError("Image must be either png, jpg or jpeg")
+    if image_file.suffix not in (".png", ".jpg", ".jpeg"):
+        raise ValueError("Image must be either png, jpg or jpeg")
 
-#     img_hash = ""
+    img_hash = ""
 
-#     with Image(filename=image_file) as img:
-#         img_hash = str(img.signature)
+    with Image.open(image_file) as img:
+        img_hash = imagehash.average_hash(img)
 
-#     if should_rename:
-#         renamed_img_file = image_file.parent / f"{img_hash}{image_file.suffix}"
-#         image_file.rename(renamed_img_file)
+    if should_rename:
+        renamed_img_file = image_file.parent / f"{img_hash}{image_file.suffix}"
+        image_file.rename(renamed_img_file)
 
-#         return renamed_img_file
+        return renamed_img_file
 
-#     return img_hash
+    return img_hash

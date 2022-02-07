@@ -3,6 +3,7 @@ import typer
 import shutil
 import anarcpt.anarcptlib as arlib
 from anarcpt.config import logger
+from anarcpt.exceptions import unpack_exc
 from fs_s3fs import S3FS
 from fs.move import move_file
 from pathlib import Path
@@ -13,6 +14,7 @@ from watchdog.events import (
     FileSystemEventHandler,
     FileSystemEvent,
 )
+
 
 class EventAction(NamedTuple):
     src_dir: str
@@ -51,10 +53,10 @@ class Watcher:
 
 
 class ImageHashHandler(RegexMatchingEventHandler):
-    IMG_RECIEPT_REGEX = [r"^.*Scan_[0-9]+"]
+    IMG_RECEIPT_REGEX = [r"^.*Scan_[0-9]+", r'^.*?\.png$']
 
     def __init__(self, target_dir: Path = None):
-        super().__init__(self.IMG_RECIEPT_REGEX)
+        super().__init__(self.IMG_RECEIPT_REGEX)
 
         self.target_dir = target_dir
 
@@ -69,12 +71,13 @@ class ImageHashHandler(RegexMatchingEventHandler):
             try:
                 with open(src_path, "r"):
                     pass
-            except Exception:
-                pass
+            except Exception as ex:
+                ex_name, ex_msg = unpack_exc(ex)
+                logger.info(f"{ex_name}: {ex_msg}")
             else:
                 break
 
-        # Check if all of the file is available to be read
+        # Check if all the file is available to be read
         file_size = -1
 
         while file_size != src_path.stat().st_size:
@@ -89,7 +92,11 @@ class ImageHashHandler(RegexMatchingEventHandler):
         )
 
         if self.target_dir:
-            shutil.move(str(hashed_file), self.target_dir)
+            try:
+                shutil.move(str(hashed_file), self.target_dir)
+            except shutil.Error as ex:
+                _, ex_msg = unpack_exc(ex)
+                logger.warning(ex_msg)
 
 
 class MoveToS3Handler(FileSystemEventHandler):

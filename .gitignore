@@ -4,3 +4,5 @@ __pycache__/
 dist/
 aws_lambda/
 *.zip
+.idea/
+.DS_Store
