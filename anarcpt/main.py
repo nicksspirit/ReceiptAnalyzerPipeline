@@ -1,10 +1,10 @@
 import typer
 import anarcpt.anarcptlib as arlib
 import anarcpt.watcher as wch
+from anarcpt.db import SQLModel, engine as sql_engine
 from anarcpt.watcher import EventAction
 from anarcpt.exceptions import unpack_exc
 from pathlib import Path
-from sqlmodel import SQLModel, create_engine
 
 cli = typer.Typer(add_completion=False)
 
@@ -36,7 +36,7 @@ def hash_image(
 @cli.command()
 def analyze(
     image_file: Path = typer.Option(
-        None, "--image-file", "-f", help="Path to image of reciept"
+        None, "--image-file", "-f", help="Path to image of receipt"
     ),
     s3document_key: str = typer.Option(
         None, "--s3doc-key", "-s3key", help="S3 document key"
@@ -52,22 +52,22 @@ def analyze(
 
     if all((image_file, s3document_key, s3document_bucket)):
         raise typer.BadParameter(
-            "analyze either a local image reciept or one stored on s3 not both"
+            "analyze either a local image receipt or one stored on s3 not both."
         )
 
     analyze_receipt = arlib.AnalyzeReceipt()
 
     if image_file:
-        receipt_summary, receipt_lineitems = analyze_receipt.analyze_local(image_file)
+        print(analyze_receipt.analyze_from_local(image_file))
     else:
-        receipt_summary, receipt_lineitems = analyze_receipt.analyze_s3(
+        receipt_summary, receipt_lineitems = analyze_receipt.analyze_from_s3(
             s3document_key, s3document_bucket
         )
 
-    import pprint as pp
-
-    pp.pprint(receipt_summary)
-    pp.pprint(receipt_lineitems, indent=2)
+    # import pprint as pp
+    #
+    # pp.pprint(receipt_summary)
+    # pp.pprint(receipt_lineitems, indent=2)
 
 
 @cli.command()
@@ -119,12 +119,8 @@ def init():
     """
     Create a sqlite database and create tables
     """
-    sqlite_file_name = "analyzed_receipts.db"
-    sqlite_url = f"sqlite:///{sqlite_file_name}"
 
-    engine = create_engine(sqlite_url, echo=True)
-
-    SQLModel.metadata.create_all(engine)
+    SQLModel.metadata.create_all(sql_engine)
 
 
 if __name__ == "__main__":

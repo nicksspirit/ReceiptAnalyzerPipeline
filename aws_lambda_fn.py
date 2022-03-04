@@ -7,7 +7,7 @@ def lambda_handler(event: dict, context):
 
     analyze_receipt = AnalyzeReceipt()
 
-    receipt_summary, receipt_lineitems = analyze_receipt.analyze_s3(
+    receipt_summary, receipt_lineitems = analyze_receipt.analyze_from_s3(
         s3document, s3bucket
     )
 

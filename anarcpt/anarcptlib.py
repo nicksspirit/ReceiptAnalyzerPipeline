@@ -1,10 +1,12 @@
+import json
 import re
 import boto3
 import csv
 import dateutil.parser as dtparser
 import imagehash
+import jmespath
 from decimal import Decimal
-from anarcpt import models
+from anarcpt import models as M
 from anarcpt.config import logger
 from functools import partial
 from pathlib import Path
@@ -16,8 +18,12 @@ from textractprettyprinter.t_pretty_print_expense import (
 )
 from typing import cast
 
-# jmespath
-# ExpenseDocuments[].SummaryFields[].[{TypeText: Type.Text, TypeConfidence: Type.Confidence, ValueText: ValueDetection.Text, ValueConfidence: ValueDetection.Confidence}][]
+RECEIPT_SUMMARY_QUERY = jmespath.compile(
+    "ExpenseDocuments[].SummaryFields[]."
+    "[{TypeText: Type.Text, TypeConfidence: Type.Confidence, "
+    "LabelText: LabelDetection.Text, LabelConfidence: LabelDetection.Confidence, "
+    "ValueText: ValueDetection.Text, ValueConfidence: ValueDetection.Confidence}][]"
+)
 MONEY_REGEX = re.compile(r"(?P<currency>[\£\$\€]{1})?(?P<amount>[,\d]+.?\d*)")
 
 get_summary_expense = partial(
@@ -32,41 +38,34 @@ get_lineitem_expense = partial(
 )
 
 
-def parse_summary_csv(img_id: str, receipt_summary_csv: str) -> models.ReceiptSummary:
-    summary_lines = receipt_summary_csv.splitlines()
-    csv_reader = filter(bool, csv.reader(summary_lines))
-
-    # This skips the first row of the CSV file.
-    next(csv_reader)
-
-    receipt_summary = models.ReceiptSummary(img_id=img_id)
-
-    try:
-        for row in csv_reader:
-            row_val = row[1].replace("$", "")
-
-            if "$" in row[1]:
-                receipt_summary.currency = "US Dollars"
-
-            if "VENDOR_NAME" in row[0]:
-                receipt_summary.vendor_name = row_val
-            elif "RECEIVER_ADDRESS" in row[0]:
-                receipt_summary.receiver_address = row_val
-            elif "INVOICE_RECEIPT_DATE" in row[0]:
-                receipt_summary.receipt_date = dtparser.parse(row_val)
-            elif "SUBTOTAL" in row[0]:
-                receipt_summary.sub_total = Decimal(row_val)
-            elif any(val in row[0] for val in ("TOTAL", "Total")):
-                receipt_summary.total = Decimal(row_val)
-            elif "TAX" in row[0]:
-                receipt_summary.tax_amnt = Decimal(row_val)
-    except Exception as e:
-        logger.exception("Unknown Exception")
+def parse_summary_csv(img_id: str, textract_resp: dict):
+    receipt_summary: dict = RECEIPT_SUMMARY_QUERY.search(textract_resp)
+    # try:
+    #     for row in csv_reader:
+    #         row_val = row[1].replace("$", "")
+    #
+    #         if "$" in row[1]:
+    #             receipt_summary.currency = "US Dollars"
+    #
+    #         if "VENDOR_NAME" in row[0]:
+    #             receipt_summary.vendor_name = row_val
+    #         elif "RECEIVER_ADDRESS" in row[0]:
+    #             receipt_summary.receiver_address = row_val
+    #         elif "INVOICE_RECEIPT_DATE" in row[0]:
+    #             receipt_summary.receipt_date = dtparser.parse(row_val)
+    #         elif "SUBTOTAL" in row[0]:
+    #             receipt_summary.sub_total = Decimal(row_val)
+    #         elif any(val in row[0] for val in ("TOTAL", "Total")):
+    #             receipt_summary.total = Decimal(row_val)
+    #         elif "TAX" in row[0]:
+    #             receipt_summary.tax_amnt = Decimal(row_val)
+    # except Exception as e:
+    #     logger.exception("Unknown Exception")
 
     return receipt_summary
 
 
-def parse_lineitem_csv(img_id: str, lineitem_csv: str) -> list[models.ReceiptLineItem]:
+def parse_lineitem_csv(img_id: str, lineitem_csv: str) -> list[M.ReceiptLineItem]:
     line_items = []
     lineitem_lines = lineitem_csv.splitlines()
     csv_reader = filter(bool, csv.reader(lineitem_lines))
@@ -88,7 +87,7 @@ def parse_lineitem_csv(img_id: str, lineitem_csv: str) -> list[models.ReceiptLin
                 if 0 <= 2 < len(row_cln) and row_cln[2]
                 else 1,
             }
-            line_item = models.ReceiptLineItem(img_id=img_id, **kwargs)
+            line_item = M.ReceiptLineItem(img_id=img_id, **kwargs)
             line_items.append(line_item)
     except Exception as e:
         logger.exception("Unknown Exception")
@@ -101,7 +100,7 @@ class AnalyzeReceipt:
         self.textract_client = boto3.client("textract", region_name=region)
 
     @classmethod
-    def analyze_local(cls, image_file: Path):
+    def analyze_from_local(cls, image_file: Path):
         instance = cls()
 
         with open(image_file, "rb") as fb:
@@ -115,7 +114,7 @@ class AnalyzeReceipt:
         return instance._analyze_receipt(resp_dict, img_id)
 
     @classmethod
-    def analyze_froms3(cls, s3document: str, s3bucket: str = "receipt-image"):
+    def analyze_from_s3(cls, s3document: str, s3bucket: str = "receipt-image"):
         instance = cls()
 
         img_id = s3document.replace(".png", "")
@@ -126,14 +125,15 @@ class AnalyzeReceipt:
 
         return instance._analyze_receipt(resp_dict, img_id)
 
-    def _analyze_receipt(self, textract_resp: dict, img_id: str):
-        summary_csv = get_summary_expense(textract_json=textract_resp)
-        lineitem_csv = get_lineitem_expense(textract_json=textract_resp)
+    @staticmethod
+    def _analyze_receipt(textract_resp: dict, img_id: str):
+        # summary_csv = get_summary_expense(textract_json=textract_resp)
+        # lineitem_csv = get_lineitem_expense(textract_json=textract_resp)
 
-        receipt_summary = parse_summary_csv(img_id, summary_csv)
-        receipt_lineitem = parse_lineitem_csv(img_id, lineitem_csv)
+        receipt_summary = parse_summary_csv(img_id, textract_resp)
+        # receipt_lineitem = parse_lineitem_csv(img_id, lineitem_csv)
 
-        return receipt_summary, receipt_lineitem
+        return receipt_summary
 
 
 def hash_image(image_file: Path, should_rename: bool) -> Path | str:
@@ -141,9 +141,7 @@ def hash_image(image_file: Path, should_rename: bool) -> Path | str:
         raise ValueError(f"{image_file} does not exists.")
 
     if image_file.suffix not in (".png", ".jpg", ".jpeg"):
-        raise ValueError("Image must be either png, jpg or jpeg")
-
-    img_hash = ""
+        raise ValueError("Image must be either png, jpg or jpeg.")
 
     with Image.open(image_file) as img:
         img_hash = imagehash.average_hash(img)
