@@ -1,7 +1,7 @@
 import typer
 import anarcpt.anarcptlib as arlib
 import anarcpt.watcher as wch
-from anarcpt.db import SQLModel, engine as sql_engine
+import anarcpt.db as db
 from anarcpt.watcher import EventAction
 from anarcpt.exceptions import unpack_exc
 from pathlib import Path
@@ -58,12 +58,13 @@ def analyze(
     analyze_receipt = arlib.AnalyzeReceipt()
 
     if image_file:
-        print(analyze_receipt.analyze_from_local(image_file))
+        receipt_summary = analyze_receipt.analyze_from_local(image_file)
     else:
         receipt_summary, receipt_lineitems = analyze_receipt.analyze_from_s3(
             s3document_key, s3document_bucket
         )
 
+    db.insert_receipt(receipt_summary)
     # import pprint as pp
     #
     # pp.pprint(receipt_summary)
@@ -73,7 +74,7 @@ def analyze(
 @cli.command()
 def watch(
     watch_dir_path: Path = typer.Argument(
-        ..., help="Directory of image reciepts to watch."
+        ..., help="Directory of image receipts to watch."
     ),
     watch_s3dir_path: Path = typer.Argument(
         ..., help="Directory to watch and upload to s3."
@@ -120,7 +121,7 @@ def init():
     Create a sqlite database and create tables
     """
 
-    SQLModel.metadata.create_all(sql_engine)
+    db.SQLModel.metadata.create_all(db.engine)
 
 
 if __name__ == "__main__":

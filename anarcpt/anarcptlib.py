@@ -1,4 +1,3 @@
-import json
 import re
 import boto3
 import csv
@@ -16,7 +15,7 @@ from textractprettyprinter.t_pretty_print_expense import (
     Textract_Expense_Pretty_Print,
     Pretty_Print_Table_Format,
 )
-from typing import cast
+from typing import cast, Any
 
 RECEIPT_SUMMARY_QUERY = jmespath.compile(
     "ExpenseDocuments[].SummaryFields[]."
@@ -24,13 +23,8 @@ RECEIPT_SUMMARY_QUERY = jmespath.compile(
     "LabelText: LabelDetection.Text, LabelConfidence: LabelDetection.Confidence, "
     "ValueText: ValueDetection.Text, ValueConfidence: ValueDetection.Confidence}][]"
 )
-MONEY_REGEX = re.compile(r"(?P<currency>[\£\$\€]{1})?(?P<amount>[,\d]+.?\d*)")
+MONEY_REGEX = re.compile(r"(?P<currency>[£$€])?(?P<amount>[,\d]+.?\d*)")
 
-get_summary_expense = partial(
-    get_string,
-    output_type=[Textract_Expense_Pretty_Print.SUMMARY],
-    table_format=Pretty_Print_Table_Format.csv,
-)
 get_lineitem_expense = partial(
     get_string,
     output_type=[Textract_Expense_Pretty_Print.LINEITEMGROUPS],
@@ -39,30 +33,40 @@ get_lineitem_expense = partial(
 
 
 def parse_summary_csv(img_id: str, textract_resp: dict):
-    receipt_summary: dict = RECEIPT_SUMMARY_QUERY.search(textract_resp)
-    # try:
-    #     for row in csv_reader:
-    #         row_val = row[1].replace("$", "")
-    #
-    #         if "$" in row[1]:
-    #             receipt_summary.currency = "US Dollars"
-    #
-    #         if "VENDOR_NAME" in row[0]:
-    #             receipt_summary.vendor_name = row_val
-    #         elif "RECEIVER_ADDRESS" in row[0]:
-    #             receipt_summary.receiver_address = row_val
-    #         elif "INVOICE_RECEIPT_DATE" in row[0]:
-    #             receipt_summary.receipt_date = dtparser.parse(row_val)
-    #         elif "SUBTOTAL" in row[0]:
-    #             receipt_summary.sub_total = Decimal(row_val)
-    #         elif any(val in row[0] for val in ("TOTAL", "Total")):
-    #             receipt_summary.total = Decimal(row_val)
-    #         elif "TAX" in row[0]:
-    #             receipt_summary.tax_amnt = Decimal(row_val)
-    # except Exception as e:
-    #     logger.exception("Unknown Exception")
+    receipt_summary: list[dict] = RECEIPT_SUMMARY_QUERY.search(textract_resp)
+    receipt_dict: dict[str, Any] = {"img_id": img_id}
+    receipt_other_dict = {}
 
-    return receipt_summary
+    for rcpt_dict in receipt_summary:
+        for key, value in rcpt_dict.items():
+            cln_value = rcpt_dict['ValueText'].replace("$", "")
+
+            if "$" in rcpt_dict['ValueText']:
+                receipt_dict['currency'] = "US Dollars"
+
+            if key == 'TypeText' and value == "VENDOR_NAME":
+                receipt_dict['vendor_name'] = cln_value
+            elif key == 'TypeText' and value == "RECEIVER_ADDRESS":
+                receipt_dict['receiver_address'] = cln_value
+            elif key == 'TypeText' and value == "INVOICE_RECEIPT_DATE":
+                receipt_dict['receipt_date'] = dtparser.parse(cln_value)
+            elif key == 'TypeText' and value == "SUBTOTAL":
+                receipt_dict['sub_total'] = Decimal(cln_value)
+            elif (
+                    (key == 'TypeText' and value == "TOTAL")
+                    or (key == "LabelText" and value == "Total")
+            ):
+                receipt_dict['total'] = Decimal(cln_value)
+            elif key == 'TypeText' and value == "TAX":
+                receipt_dict['tax_amount'] = Decimal(cln_value)
+            elif key == 'TypeText' and value == "OTHER" and rcpt_dict['ValueText']:
+                label_key = rcpt_dict['LabelText']
+                label_value = rcpt_dict['ValueText']
+
+                receipt_other_dict[label_key] = label_value
+                receipt_dict["other_data"] = receipt_other_dict
+
+    return M.ReceiptSummary(**receipt_dict)
 
 
 def parse_lineitem_csv(img_id: str, lineitem_csv: str) -> list[M.ReceiptLineItem]:
@@ -99,35 +103,28 @@ class AnalyzeReceipt:
     def __init__(self, region="us-east-2"):
         self.textract_client = boto3.client("textract", region_name=region)
 
-    @classmethod
-    def analyze_from_local(cls, image_file: Path):
-        instance = cls()
+    def analyze_from_local(self, image_file: Path):
 
         with open(image_file, "rb") as fb:
             image_bytes = fb.read()
 
         img_id = image_file.stem
-        resp = instance.textract_client.analyze_expense(Document={"Bytes": image_bytes})
-
+        resp = self.textract_client.analyze_expense(Document={"Bytes": image_bytes})
         resp_dict = cast(dict, resp)
 
-        return instance._analyze_receipt(resp_dict, img_id)
+        return self._analyze_receipt(resp_dict, img_id)
 
-    @classmethod
-    def analyze_from_s3(cls, s3document: str, s3bucket: str = "receipt-image"):
-        instance = cls()
-
-        img_id = s3document.replace(".png", "")
-        resp = instance.textract_client.analyze_expense(
+    def analyze_from_s3(self, s3document: str, s3bucket: str = "receipt-image"):
+        img_id = s3document.split(".")[0]
+        resp = self.textract_client.analyze_expense(
             Document={"S3Object": {"Bucket": s3bucket, "Name": s3document}}
         )
         resp_dict = cast(dict, resp)
 
-        return instance._analyze_receipt(resp_dict, img_id)
+        return self._analyze_receipt(resp_dict, img_id)
 
     @staticmethod
-    def _analyze_receipt(textract_resp: dict, img_id: str):
-        # summary_csv = get_summary_expense(textract_json=textract_resp)
+    def _analyze_receipt(textract_resp: dict, img_id: str) -> M.ReceiptSummary:
         # lineitem_csv = get_lineitem_expense(textract_json=textract_resp)
 
         receipt_summary = parse_summary_csv(img_id, textract_resp)
