@@ -1,0 +1,218 @@
+[
+  {
+    'TypeText': 'VENDOR_NAME',
+    'TypeConfidence': 98.09123992919922,
+    'LabelText': None,
+    'LabelConfidence': None,
+    'ValueText': 'FARMERS MARKET',
+    'ValueConfidence': 97.99114227294922
+  },
+  {
+    'TypeText': 'OTHER',
+    'TypeConfidence': 99.0,
+    'LabelText': 'AID :',
+    'LabelConfidence': 86.06405639648438,
+    'ValueText': 'A0000000031010',
+    'ValueConfidence': 98.90248107910156
+  },
+  {
+    'TypeText': 'OTHER',
+    'TypeConfidence': 97.5,
+    'LabelText': 'RESULT :',
+    'LabelConfidence': 92.58724212646484,
+    'ValueText': '00 APPROVED 000',
+    'ValueConfidence': 97.35822296142578
+  },
+  {
+    'TypeText': 'OTHER',
+    'TypeConfidence': 97.0,
+    'LabelText': 'IAD :',
+    'LabelConfidence': 91.48054504394531,
+    'ValueText': '0610120360A000',
+    'ValueConfidence': 96.90083312988281
+  },
+  {
+    'TypeText': 'OTHER',
+    'TypeConfidence': 97.0,
+    'LabelText': 'TVR :',
+    'LabelConfidence': 90.80976867675781,
+    'ValueText': '8080008000',
+    'ValueConfidence': 96.97740936279297
+  },
+  {
+    'TypeText': 'OTHER',
+    'TypeConfidence': 95.5,
+    'LabelText': 'Merch Id:',
+    'LabelConfidence': 95.37362670898438,
+    'ValueText': '542929806860003',
+    'ValueConfidence': 95.47940826416016
+  },
+  {
+    'TypeText': 'OTHER',
+    'TypeConfidence': 95.0,
+    'LabelText': 'TYPE :',
+    'LabelConfidence': 93.07870483398438,
+    'ValueText': 'Purchase',
+    'ValueConfidence': 94.9435806274414
+  },
+  {
+    'TypeText': 'OTHER',
+    'TypeConfidence': 94.5,
+    'LabelText': 'AC :',
+    'LabelConfidence': 89.94212341308594,
+    'ValueText': 'C0826F2848E11A51',
+    'ValueConfidence': 93.95963287353516
+  },
+  {
+    'TypeText': 'OTHER',
+    'TypeConfidence': 94.5,
+    'LabelText': 'AUTHOR. # :',
+    'LabelConfidence': 93.09681701660156,
+    'ValueText': '019349',
+    'ValueConfidence': 94.48377990722656
+  },
+  {
+    'TypeText': 'OTHER',
+    'TypeConfidence': 94.0,
+    'LabelText': 'Label :',
+    'LabelConfidence': 82.34880065917969,
+    'ValueText': 'VISA CREDIT',
+    'ValueConfidence': 93.98660278320312
+  },
+  {
+    'TypeText': 'OTHER',
+    'TypeConfidence': 92.5,
+    'LabelText': 'SEQUENCE #:',
+    'LabelConfidence': 90.58139038085938,
+    'ValueText': '000203',
+    'ValueConfidence': 92.48758697509766
+  },
+  {
+    'TypeText': 'OTHER',
+    'TypeConfidence': 92.5,
+    'LabelText': 'CARD :',
+    'LabelConfidence': 89.95450592041016,
+    'ValueText': '************6957',
+    'ValueConfidence': 72.0342788696289
+  },
+  {
+    'TypeText': 'OTHER',
+    'TypeConfidence': 92.5,
+    'LabelText': 'Term Id:',
+    'LabelConfidence': 92.44222259521484,
+    'ValueText': '00558734',
+    'ValueConfidence': 92.48851013183594
+  },
+  {
+    'TypeText': 'OTHER',
+    'TypeConfidence': 91.5,
+    'LabelText': 'TENDER :',
+    'LabelConfidence': 88.73161315917969,
+    'ValueText': 'Visa',
+    'ValueConfidence': 91.44560241699219
+  },
+  {
+    'TypeText': 'OTHER',
+    'TypeConfidence': 91.0,
+    'LabelText': 'ARC',
+    'LabelConfidence': 90.96282958984375,
+    'ValueText': '00',
+    'ValueConfidence': 90.98338317871094
+  },
+  {
+    'TypeText': 'OTHER',
+    'TypeConfidence': 87.5,
+    'LabelText': 'TSI :',
+    'LabelConfidence': 80.00653839111328,
+    'ValueText': '6800',
+    'ValueConfidence': 87.46232604980469
+  },
+  {
+    'TypeText': 'OTHER',
+    'TypeConfidence': 78.5,
+    'LabelText': 'ENTRY METHOD',
+    'LabelConfidence': 78.39603424072266,
+    'ValueText': 'C',
+    'ValueConfidence': 76.26243591308594
+  },
+  {
+    'TypeText': 'OTHER',
+    'TypeConfidence': 77.0,
+    'LabelText': 'TOTAL SALES',
+    'LabelConfidence': 76.98222351074219,
+    'ValueText': '$44.77',
+    'ValueConfidence': 76.86734008789062
+  },
+  {
+    'TypeText': 'OTHER',
+    'TypeConfidence': 71.5,
+    'LabelText': 'Net Sales',
+    'LabelConfidence': 71.4503402709961,
+    'ValueText': '$44.77',
+    'ValueConfidence': 71.4130630493164
+  },
+  {
+    'TypeText': 'OTHER',
+    'TypeConfidence': 66.5,
+    'LabelText': 'Trs#:',
+    'LabelConfidence': 50.49298858642578,
+    'ValueText': '395052',
+    'ValueConfidence': 65.12686157226562
+  },
+  {
+    'TypeText': 'OTHER',
+    'TypeConfidence': 64.5,
+    'LabelText': 'Item count',
+    'LabelConfidence': 64.46075439453125,
+    'ValueText': '5',
+    'ValueConfidence': 64.45499420166016
+  },
+  {
+    'TypeText': 'OTHER',
+    'TypeConfidence': 61.5,
+    'LabelText': 'Chip read',
+    'LabelConfidence': 60.711605072021484,
+    'ValueText': '',
+    'ValueConfidence': 0.0
+  },
+  {
+    'TypeText': 'OTHER',
+    'TypeConfidence': 51.0,
+    'LabelText': 'Visa',
+    'LabelConfidence': 50.980430603027344,
+    'ValueText': '$44.77',
+    'ValueConfidence': 50.938743591308594
+  },
+  {
+    'TypeText': 'TOTAL',
+    'TypeConfidence': 96.68757629394531,
+    'LabelText': 'AMOUNT :',
+    'LabelConfidence': 59.80397033691406,
+    'ValueText': '$44.77',
+    'ValueConfidence': 95.78546142578125
+  },
+  {
+    'TypeText': 'INVOICE_RECEIPT_DATE',
+    'TypeConfidence': 99.83200073242188,
+    'LabelText': 'DATE/TIME :',
+    'LabelConfidence': 96.72295379638672,
+    'ValueText': 'FEB 19,2022 16:48',
+    'ValueConfidence': 99.09243774414062
+  },
+  {
+    'TypeText': 'INVOICE_RECEIPT_ID',
+    'TypeConfidence': 93.33557891845703,
+    'LabelText': 'Inv#',
+    'LabelConfidence': 80.90351867675781,
+    'ValueText': ':00395012',
+    'ValueConfidence': 92.01397705078125
+  },
+  {
+    'TypeText': 'SUBTOTAL',
+    'TypeConfidence': 98.83583068847656,
+    'LabelText': 'SUB TOTAL',
+    'LabelConfidence': 98.80215454101562,
+    'ValueText': '$44.77',
+    'ValueConfidence': 98.57633209228516
+  }
+]

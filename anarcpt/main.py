@@ -1,10 +1,15 @@
-import typer
-import anarcpt.anarcptlib as arlib
-import anarcpt.watcher as wch
-import anarcpt.db as db
-from anarcpt.watcher import EventAction
-from anarcpt.exceptions import unpack_exc
+import queue
+import threading
 from pathlib import Path
+
+import typer
+from sqlmodel import SQLModel
+
+import anarcpt.anarcptlib as arlib
+import anarcpt.db as db
+import anarcpt.watcher as wch
+from anarcpt.exceptions import unpack_exc
+from anarcpt.watcher import EventAction
 
 cli = typer.Typer(add_completion=False)
 
@@ -64,7 +69,7 @@ def analyze(
             s3document_key, s3document_bucket
         )
 
-    db.insert_receipt(receipt_summary)
+    db.insert_receipt([receipt_summary])
     # import pprint as pp
     #
     # pp.pprint(receipt_summary)
@@ -78,6 +83,9 @@ def watch(
     ),
     watch_s3dir_path: Path = typer.Argument(
         ..., help="Directory to watch and upload to s3."
+    ),
+    queue_size: int = typer.Option(
+        10, "--queue-size", "-s", help="Size of queue for background job"
     ),
     pause_for: int = typer.Option(
         5, "--pause", "-p", help="How long to pause the watcher in secs."
@@ -95,13 +103,22 @@ def watch(
         raise typer.BadParameter(f"{watch_s3dir_path} does not exists.")
 
     if watch_dir_path == watch_s3dir_path:
-        raise typer.BadParameter(f"Directories can not be equal.")
+        raise typer.BadParameter(f"Directories can not be the same.")
 
     dir_to_watch = str(watch_dir_path.absolute())
-    dir_upload_s3 = str(watch_s3dir_path.absolute())
+    dir_rcpt_watch = str(watch_s3dir_path.absolute())
 
+    db_queue = queue.Queue(queue_size)
     hash_handler = wch.ImageHashHandler(watch_s3dir_path)
-    s3_handler = wch.MoveToS3Handler()
+    db_handler = wch.ReceiptAnalyzerHandler(db_queue)
+
+    db_worker = threading.Thread(
+        name="db-receipt-worker",
+        target=wch.ReceiptAnalyzerHandler.write_receipt_to_db,
+        args=(db_queue,),
+    )
+    db_worker.daemon = True
+    db_worker.start()
 
     typer.echo(f"Watching {watch_dir_path} for newly scanned receipts...")
     typer.echo(f"Watching {watch_s3dir_path} for hashed receipts...")
@@ -109,9 +126,9 @@ def watch(
     wch.Watcher(
         [
             EventAction(dir_to_watch, hash_handler),
-            # EventAction(dir_upload_s3, s3_handler),
+            EventAction(dir_rcpt_watch, db_handler),
         ],
-        pause_for=pause_for
+        pause_for=pause_for,
     ).run()
 
 
@@ -121,7 +138,7 @@ def init():
     Create a sqlite database and create tables
     """
 
-    db.SQLModel.metadata.create_all(db.engine)
+    SQLModel.metadata.create_all(db.engine)
 
 
 if __name__ == "__main__":

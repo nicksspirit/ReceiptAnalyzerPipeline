@@ -32,14 +32,23 @@ get_lineitem_expense = partial(
 )
 
 
+def get_money_val(val: str) -> Decimal:
+    if match := MONEY_REGEX.match(val):
+        amount = match.group("amount")
+    else:
+        amount = 0
+
+    return Decimal(amount)
+
+
 def parse_summary_csv(img_id: str, textract_resp: dict):
-    receipt_summary: list[dict] = RECEIPT_SUMMARY_QUERY.search(textract_resp)
+    receipt_summary: list[dict[str, str]] = RECEIPT_SUMMARY_QUERY.search(textract_resp)
     receipt_dict: dict[str, Any] = {"img_id": img_id}
     receipt_other_dict = {}
 
     for rcpt_dict in receipt_summary:
         for key, value in rcpt_dict.items():
-            cln_value = rcpt_dict['ValueText'].replace("$", "")
+            cln_value = rcpt_dict['ValueText'].replace("$", "").strip()
 
             if "$" in rcpt_dict['ValueText']:
                 receipt_dict['currency'] = "US Dollars"
@@ -51,14 +60,14 @@ def parse_summary_csv(img_id: str, textract_resp: dict):
             elif key == 'TypeText' and value == "INVOICE_RECEIPT_DATE":
                 receipt_dict['receipt_date'] = dtparser.parse(cln_value)
             elif key == 'TypeText' and value == "SUBTOTAL":
-                receipt_dict['sub_total'] = Decimal(cln_value)
+                receipt_dict['sub_total'] = get_money_val(cln_value)
             elif (
                     (key == 'TypeText' and value == "TOTAL")
                     or (key == "LabelText" and value == "Total")
             ):
-                receipt_dict['total'] = Decimal(cln_value)
+                receipt_dict['total'] = get_money_val(cln_value)
             elif key == 'TypeText' and value == "TAX":
-                receipt_dict['tax_amount'] = Decimal(cln_value)
+                receipt_dict['tax_amount'] = get_money_val(cln_value)
             elif key == 'TypeText' and value == "OTHER" and rcpt_dict['ValueText']:
                 label_key = rcpt_dict['LabelText']
                 label_value = rcpt_dict['ValueText']
