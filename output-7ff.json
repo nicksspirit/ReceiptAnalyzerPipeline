@@ -1,0 +1,114 @@
+[
+  {
+    'TypeText': 'VENDOR_NAME',
+    'TypeConfidence': 97.81664276123047,
+    'LabelText': None,
+    'LabelConfidence': None,
+    'ValueText': 'CVS pharmacy R',
+    'ValueConfidence': 93.3287353515625
+  },
+  {
+    'TypeText': 'OTHER',
+    'TypeConfidence': 56.0,
+    'LabelText': 'CHANGE',
+    'LabelConfidence': 55.98503494262695,
+    'ValueText': '.00',
+    'ValueConfidence': 55.731956481933594
+  },
+  {
+    'TypeText': 'OTHER',
+    'TypeConfidence': 44.0,
+    'LabelText': 'TRAN TYPE SALE',
+    'LabelConfidence': 43.958431243896484,
+    'ValueText': 'A0000000031010',
+    'ValueConfidence': 43.960426330566406
+  },
+  {
+    'TypeText': 'OTHER',
+    'TypeConfidence': 42.5,
+    'LabelText': 'APPROVED# 005234',
+    'LabelConfidence': 42.454044342041016,
+    'ValueText': 'REF# 181327',
+    'ValueConfidence': 42.182952880859375
+  },
+  {
+    'TypeText': 'OTHER',
+    'TypeConfidence': 40.5,
+    'LabelText': 'CHARGE',
+    'LabelConfidence': 40.47855758666992,
+    'ValueText': '16.76',
+    'ValueConfidence': 39.26899719238281
+  },
+  {
+    'TypeText': 'OTHER',
+    'TypeConfidence': 40.0,
+    'LabelText': '************6957',
+    'LabelConfidence': 32.185726165771484,
+    'ValueText': 'CH',
+    'ValueConfidence': 39.20758056640625
+  },
+  {
+    'TypeText': 'OTHER',
+    'TypeConfidence': 37.0,
+    'LabelText': 'NO SIGNATURE REQUIRED',
+    'LabelConfidence': 36.936073303222656,
+    'ValueText': 'CVM: 5E0000',
+    'ValueConfidence': 36.963314056396484
+  },
+  {
+    'TypeText': 'OTHER',
+    'TypeConfidence': 29.0,
+    'LabelText': 'TC: 38FEOF858207E942',
+    'LabelConfidence': 28.29816436767578,
+    'ValueText': 'TERMINAL# 05042654',
+    'ValueConfidence': 28.966068267822266
+  },
+  {
+    'TypeText': 'OTHER',
+    'TypeConfidence': 24.5,
+    'LabelText': 'TSI(9B):',
+    'LabelConfidence': 24.20364761352539,
+    'ValueText': '6800',
+    'ValueConfidence': 24.24204444885254
+  },
+  {
+    'TypeText': 'OTHER',
+    'TypeConfidence': 22.0,
+    'LabelText': 'Health Care Eligible Total',
+    'LabelConfidence': 21.956832885742188,
+    'ValueText': '16.76',
+    'ValueConfidence': 21.839374542236328
+  },
+  {
+    'TypeText': 'OTHER',
+    'TypeConfidence': 22.0,
+    'LabelText': '7294 9880',
+    'LabelConfidence': 20.43260955810547,
+    'ValueText': '432 73',
+    'ValueConfidence': 20.98263168334961
+  },
+  {
+    'TypeText': 'TOTAL',
+    'TypeConfidence': 98.85694122314453,
+    'LabelText': 'TOTAL',
+    'LabelConfidence': 98.78424072265625,
+    'ValueText': '16.76',
+    'ValueConfidence': 97.2930908203125
+  },
+  {
+    'TypeText': 'SUBTOTAL',
+    'TypeConfidence': 99.70035552978516,
+    'LabelText': 'SUBTOTAL',
+    'LabelConfidence': 99.46804809570312,
+    'ValueText': '15.28',
+    'ValueConfidence': 97.7388687133789
+  },
+  {
+    'TypeText': 'TAX',
+    'TypeConfidence': 95.7825698852539,
+    'LabelText': 'MO 9.679% TAX',
+    'LabelConfidence': 93.14424133300781,
+    'ValueText': '1.48',
+    'ValueConfidence': 93.44380187988281
+  }
+]

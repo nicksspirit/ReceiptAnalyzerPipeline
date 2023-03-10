@@ -23,6 +23,7 @@ fs-s3fs = "^1.1.1"
 typer = "^0.4.0"
 watchdog = "^2.1.6"
 alembic = "^1.7.6"
+better-exceptions = "^0.3.3"
 
 [tool.pyright]
 venvPath = "./"

@@ -4,6 +4,8 @@ import shutil
 import anarcpt.anarcptlib as arlib
 from anarcpt.config import logger
 from anarcpt.exceptions import unpack_exc
+import anarcpt.db as db
+from queue import Queue
 from fs_s3fs import S3FS
 from fs.move import move_file
 from pathlib import Path
@@ -73,7 +75,7 @@ class ImageHashHandler(RegexMatchingEventHandler):
                     pass
             except Exception as ex:
                 ex_name, ex_msg = unpack_exc(ex)
-                logger.info(f"{ex_name}: {ex_msg}")
+                logger.error(f"{ex_name}: {ex_msg}")
             else:
                 break
 
@@ -114,3 +116,42 @@ class MoveToS3Handler(FileSystemEventHandler):
         move_file(src_dir, src_file, self.s3fs, src_file)
 
         logger.info(f"Moved {src_path} -> {self.s3fs}")
+
+
+class ReceiptAnalyzerHandler(FileSystemEventHandler):
+
+    def __init__(self, db_queue: Queue):
+        self.analyze_receipt = arlib.AnalyzeReceipt()
+        self.queue_count = 0
+        self.queue = db_queue
+
+    def on_created(self, event):
+        if event.is_directory:
+            return
+
+        local_img_path = Path(event.src_path)
+        try:
+            receipt_summary = self.analyze_receipt.analyze_from_local(local_img_path)
+
+            logger.debug(f"{self.queue_count=}")
+            if self.queue_count >= self.queue.maxsize-1:
+                logger.debug("Queue is full sending sentinel value.")
+                self.queue.put_nowait(None)
+                self.queue_count = 0
+
+            logger.debug(f"Adding receipt {receipt_summary.img_id} to queue.")
+            self.queue.put(receipt_summary, block=True)
+            self.queue_count += 1
+        except Exception as e:
+            ex_name, ex_msg = unpack_exc(e)
+            logger.error(f"({local_img_path.name}) {ex_name}: {ex_msg}")
+
+    @staticmethod
+    def write_receipt_to_db(queue: Queue):
+        while True:
+            if not queue.empty():
+                continue
+
+            receipt_summaries = list(iter(queue.get, None))
+            logger.debug(f"{len(receipt_summaries)=}")
+            db.insert_receipt(receipt_summaries)

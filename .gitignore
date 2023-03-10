@@ -7,3 +7,4 @@ aws_lambda/
 *.db
 *.zip
 .DS_Store
+.python-version
