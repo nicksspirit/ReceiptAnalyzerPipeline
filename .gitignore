@@ -1,6 +1,7 @@
 __pycache__/
 .idea/
 .venv/
+.vscode/
 .ropeproject/
 dist/
 aws_lambda/
