@@ -1,21 +1,21 @@
-import re
-import boto3
 import csv
+import re
+from decimal import Decimal
+from functools import partial
+from pathlib import Path
+from typing import Any, cast
+
+import boto3
 import dateutil.parser as dtparser
 import imagehash
 import jmespath
-from decimal import Decimal
-from anarcpt import models as M
-from anarcpt.config import logger
-from functools import partial
-from pathlib import Path
+from imagehash import ImageHash
 from PIL import Image
 from textractprettyprinter.t_pretty_print_expense import (
-    get_string,
-    Textract_Expense_Pretty_Print,
-    Pretty_Print_Table_Format,
-)
-from typing import cast, Any
+    Pretty_Print_Table_Format, Textract_Expense_Pretty_Print, get_string)
+
+from anarcpt import models as M
+from anarcpt.config import logger
 
 RECEIPT_SUMMARY_QUERY = jmespath.compile(
     "ExpenseDocuments[].SummaryFields[]."
@@ -48,29 +48,28 @@ def parse_summary_csv(img_id: str, textract_resp: dict):
 
     for rcpt_dict in receipt_summary:
         for key, value in rcpt_dict.items():
-            cln_value = rcpt_dict['ValueText'].replace("$", "").strip()
+            cln_value = rcpt_dict["ValueText"].replace("$", "").strip()
 
-            if "$" in rcpt_dict['ValueText']:
-                receipt_dict['currency'] = "US Dollars"
+            if "$" in rcpt_dict["ValueText"]:
+                receipt_dict["currency"] = "US Dollars"
 
-            if key == 'TypeText' and value == "VENDOR_NAME":
-                receipt_dict['vendor_name'] = cln_value
-            elif key == 'TypeText' and value == "RECEIVER_ADDRESS":
-                receipt_dict['receiver_address'] = cln_value
-            elif key == 'TypeText' and value == "INVOICE_RECEIPT_DATE":
-                receipt_dict['receipt_date'] = dtparser.parse(cln_value)
-            elif key == 'TypeText' and value == "SUBTOTAL":
-                receipt_dict['sub_total'] = get_money_val(cln_value)
-            elif (
-                    (key == 'TypeText' and value == "TOTAL")
-                    or (key == "LabelText" and value == "Total")
+            if key == "TypeText" and value == "VENDOR_NAME":
+                receipt_dict["vendor_name"] = cln_value
+            elif key == "TypeText" and value == "RECEIVER_ADDRESS":
+                receipt_dict["receiver_address"] = cln_value
+            elif key == "TypeText" and value == "INVOICE_RECEIPT_DATE":
+                receipt_dict["receipt_date"] = dtparser.parse(cln_value)
+            elif key == "TypeText" and value == "SUBTOTAL":
+                receipt_dict["sub_total"] = get_money_val(cln_value)
+            elif (key == "TypeText" and value == "TOTAL") or (
+                key == "LabelText" and value == "Total"
             ):
-                receipt_dict['total'] = get_money_val(cln_value)
-            elif key == 'TypeText' and value == "TAX":
-                receipt_dict['tax_amount'] = get_money_val(cln_value)
-            elif key == 'TypeText' and value == "OTHER" and rcpt_dict['ValueText']:
-                label_key = rcpt_dict['LabelText']
-                label_value = rcpt_dict['ValueText']
+                receipt_dict["total"] = get_money_val(cln_value)
+            elif key == "TypeText" and value == "TAX":
+                receipt_dict["tax_amount"] = get_money_val(cln_value)
+            elif key == "TypeText" and value == "OTHER" and rcpt_dict["ValueText"]:
+                label_key = rcpt_dict["LabelText"]
+                label_value = rcpt_dict["ValueText"]
 
                 receipt_other_dict[label_key] = label_value
                 receipt_dict["other_data"] = receipt_other_dict
@@ -113,7 +112,6 @@ class AnalyzeReceipt:
         self.textract_client = boto3.client("textract", region_name=region)
 
     def analyze_from_local(self, image_file: Path):
-
         with open(image_file, "rb") as fb:
             image_bytes = fb.read()
 
@@ -142,20 +140,14 @@ class AnalyzeReceipt:
         return receipt_summary
 
 
-def hash_image(image_file: Path, should_rename: bool) -> Path | str:
-    if not image_file.exists() or not image_file.is_file():
-        raise ValueError(f"{image_file} does not exists.")
+def hash_image(image_path: Path) -> ImageHash:
+    if not image_path.exists() or not image_path.is_file():
+        raise ValueError(f'"{image_path.absolute()}" does not exists.')
 
-    if image_file.suffix not in (".png", ".jpg", ".jpeg"):
+    if image_path.suffix not in (".png", ".jpg", ".jpeg"):
         raise ValueError("Image must be either png, jpg or jpeg.")
 
-    with Image.open(image_file) as img:
-        img_hash = imagehash.average_hash(img)
-
-    if should_rename:
-        renamed_img_file = image_file.parent / f"{img_hash}{image_file.suffix}"
-        image_file.rename(renamed_img_file)
-
-        return renamed_img_file
+    with Image.open(image_path) as img:
+        img_hash: ImageHash = imagehash.average_hash(img)
 
     return img_hash
