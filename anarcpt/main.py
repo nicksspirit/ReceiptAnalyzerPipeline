@@ -18,27 +18,6 @@ cli.add_typer(dbcli, name="db")
 
 
 @cli.command()
-def hash_image(
-    image_file: Path = typer.Argument(..., help="Path to image of receipt"),
-    should_rename: bool = typer.Option(
-        False, "--rename", "-r", help="Rename image file with hash"
-    ),
-):
-    """
-    Generate a unique hash signature of a given image.
-    """
-
-    try:
-        hash_val = arlib.hash_image(image_file, should_rename)
-    except ValueError as e:
-        _, exc_msg = unpack_exc(e)
-
-        raise typer.BadParameter(exc_msg)
-    else:
-        typer.echo(hash_val)
-
-
-@cli.command()
 def analyze(
     image_file: Path = typer.Option(
         None, "--image-file", "-f", help="Path to image of receipt"
