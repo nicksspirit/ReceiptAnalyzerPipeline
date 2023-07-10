@@ -1,5 +1,4 @@
 import time
-import typer
 import shutil
 import anarcpt.anarcptlib as arlib
 from anarcpt.config import logger
@@ -37,7 +36,7 @@ class Watcher:
                 time.sleep(self.pause_for)
         except KeyboardInterrupt:
             self.stop()
-            raise typer.Abort()
+            exit(2)
 
     def start(self):
         self._schedule()
